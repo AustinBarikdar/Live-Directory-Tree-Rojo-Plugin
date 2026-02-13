@@ -92,7 +92,7 @@ class EmbeddedServer {
                     this.lastUpdateTime = Date.now();
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ status: 'ok', received: true }));
-                    
+
                     // Notify that we got new data
                     if (this.onDataReceived) {
                         this.onDataReceived(this.currentTree);
@@ -152,7 +152,7 @@ class EmbeddedServer {
     <h1>🌲 Live Directory Tree Server</h1>
     <p>Running inside VS Code on port ${this.port}</p>
     <div id="status" class="status disconnected">Checking...</div>
-    <p><button onclick="copyTree()">📋 Copy Tree</button></p>
+    <p><button onclick="copyTree()">Copy Tree</button></p>
     <pre id="tree">Loading...</pre>
     <script>
         async function refresh() {
@@ -251,7 +251,7 @@ class RobloxDirectoryTreeProvider {
     updateStatusBar() {
         const tree = this.server.getTree();
         const hasData = tree.containers && tree.containers.length > 0;
-        
+
         if (this.server.isRunning()) {
             if (hasData) {
                 this.statusBarItem.text = `$(check) Roblox: ${tree.name || 'Connected'}`;
@@ -421,7 +421,7 @@ function activate(context) {
         updateServerContext();
         treeProvider.stopAutoRefresh();
         treeProvider.refresh();
-        vscode.window.showInformationMessage('🛑 Server stopped');
+        vscode.window.showInformationMessage('Server stopped');
     });
 
     const refreshCmd = vscode.commands.registerCommand('robloxDirectoryTree.refresh', () => {
@@ -438,7 +438,7 @@ function activate(context) {
     const copyTreeCmd = vscode.commands.registerCommand('robloxDirectoryTree.copyTree', () => {
         const text = treeProvider.getTreeAsText();
         vscode.env.clipboard.writeText(text);
-        vscode.window.showInformationMessage('📋 Directory tree copied to clipboard!');
+        vscode.window.showInformationMessage(' Directory tree copied to clipboard!');
     });
 
     const setUrlCmd = vscode.commands.registerCommand('robloxDirectoryTree.setServerUrl', async () => {
@@ -454,6 +454,77 @@ function activate(context) {
         }
     });
 
+    // Auto-setup MCP for Claude Desktop
+    const setupMCPCmd = vscode.commands.registerCommand('robloxDirectoryTree.setupMCP', async () => {
+        const os = process.platform;
+        const path = require('path');
+        const fs = require('fs');
+
+        // Find Claude Desktop config path
+        let configPath;
+        if (os === 'win32') {
+            configPath = path.join(process.env.APPDATA, 'Claude', 'claude_desktop_config.json');
+        } else if (os === 'darwin') {
+            configPath = path.join(process.env.HOME, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+        } else {
+            configPath = path.join(process.env.HOME, '.config', 'Claude', 'claude_desktop_config.json');
+        }
+
+        // Get the MCP server script path
+        const mcpServerPath = path.join(__dirname, 'mcp-server.js');
+
+        try {
+            // Read existing config or create new
+            let config = { mcpServers: {} };
+
+            // Create directory if it doesn't exist
+            const configDir = path.dirname(configPath);
+            if (!fs.existsSync(configDir)) {
+                fs.mkdirSync(configDir, { recursive: true });
+            }
+
+            // Read existing config if it exists
+            if (fs.existsSync(configPath)) {
+                try {
+                    const existing = fs.readFileSync(configPath, 'utf8');
+                    config = JSON.parse(existing);
+                    if (!config.mcpServers) {
+                        config.mcpServers = {};
+                    }
+                } catch (e) {
+                    // If JSON is invalid, backup and start fresh
+                    const backupPath = configPath + '.backup';
+                    fs.copyFileSync(configPath, backupPath);
+                    vscode.window.showWarningMessage(`Backed up invalid config to ${backupPath}`);
+                }
+            }
+
+            // Add our MCP server
+            config.mcpServers['roblox-directory-tree'] = {
+                command: 'node',
+                args: [mcpServerPath]
+            };
+
+            // Write config
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+            // Show success message
+            const restart = await vscode.window.showInformationMessage(
+                '✅ Claude Desktop configured! Restart Claude Desktop to enable.',
+                'Open Config File',
+                'OK'
+            );
+
+            if (restart === 'Open Config File') {
+                const doc = await vscode.workspace.openTextDocument(configPath);
+                await vscode.window.showTextDocument(doc);
+            }
+
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to setup MCP: ${error.message}`);
+        }
+    });
+
     // Auto-start server if configured
     const autoStart = vscode.workspace.getConfiguration('robloxDirectoryTree').get('autoStartServer');
     if (autoStart) {
@@ -462,6 +533,24 @@ function activate(context) {
 
     // Initial context
     updateServerContext();
+
+    // First-time setup prompt (async IIFE)
+    (async () => {
+        const hasPrompted = context.globalState.get('mcpSetupPrompted');
+        if (!hasPrompted) {
+            const setup = await vscode.window.showInformationMessage(
+                '🌲 Roblox Directory Tree installed! Want to enable Claude AI integration?',
+                'Setup Claude Integration',
+                'Later'
+            );
+
+            if (setup === 'Setup Claude Integration') {
+                vscode.commands.executeCommand('robloxDirectoryTree.setupMCP');
+            }
+
+            context.globalState.update('mcpSetupPrompted', true);
+        }
+    })();
 
     // Register all disposables
     context.subscriptions.push(
@@ -473,6 +562,7 @@ function activate(context) {
         copyPathCmd,
         copyTreeCmd,
         setUrlCmd,
+        setupMCPCmd,
         { dispose: () => server.stop() }
     );
 }

@@ -2,8 +2,17 @@
   "name": "roblox-live-directory-tree",
   "displayName": "Roblox Live Directory Tree",
   "description": "Live view of your Roblox project structure synced from Studio",
-  "version": "1.0.0",
-  "publisher": "your-name",
+  "version": "1.0.1",
+  "publisher": "AverageBum",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AustinBarikdar/Live-Directory-Tree-Rojo-Plugin"
+  },
+  "homepage": "https://github.com/AustinBarikdar/Live-Directory-Tree-Rojo-Plugin#readme",
+  "bugs": {
+    "url": "https://github.com/AustinBarikdar/Live-Directory-Tree-Rojo-Plugin/issues"
+  },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -14,6 +23,9 @@
     "onStartupFinished"
   ],
   "main": "./src/extension.js",
+  "bin": {
+    "roblox-directory-mcp": "./src/mcp-server.js"
+  },
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -62,6 +74,11 @@
       {
         "command": "robloxDirectoryTree.setServerUrl",
         "title": "Set Server URL"
+      },
+      {
+        "command": "robloxDirectoryTree.setupMCP",
+        "title": "Setup Claude Desktop Integration",
+        "icon": "$(sparkle)"
       }
     ],
     "menus": {
@@ -85,6 +102,11 @@
           "command": "robloxDirectoryTree.copyTree",
           "when": "view == robloxDirectoryTree",
           "group": "navigation@3"
+        },
+        {
+          "command": "robloxDirectoryTree.setupMCP",
+          "when": "view == robloxDirectoryTree",
+          "group": "navigation@4"
         },
         {
           "command": "robloxDirectoryTree.setServerUrl",
@@ -135,8 +157,13 @@
     "test": "node ./test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
     "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
     "eslint": "^8.28.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "all": "^0.0.0",
+    "zod": "^3.25.0"
   }
 }
