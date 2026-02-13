@@ -2,7 +2,7 @@
   "name": "roblox-live-directory-tree",
   "displayName": "Roblox Live Directory Tree",
   "description": "Live view of your Roblox project structure synced from Studio",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "AverageBum",
   "repository": {
     "type": "git",
