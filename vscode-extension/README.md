@@ -1,69 +1,63 @@
-# Roblox Directory Tree MCP Server
+# Roblox Live Directory Tree
 
-This MCP (Model Context Protocol) server allows Claude to directly fetch your Roblox project structure.
+A VS Code extension that gives you a live view of your Roblox project structure, synced directly from Roblox Studio. Includes built-in Claude Desktop integration via MCP.
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Install the VS Code Extension
 
-```bash
-cd mcp-server
-npm install
-```
+Install the `.vsix` file from the [Releases](https://github.com/AustinBarikdar/Live-Directory-Tree-Rojo-Plugin/releases) page, or search for **Roblox Live Directory Tree** in the VS Code marketplace.
 
-### 2. Configure Claude Desktop
+No extra install steps required — everything is bundled with the extension.
 
-Add this to your Claude Desktop config file:
+### 2. Install the Roblox Studio Plugin
 
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+Install the companion plugin in Roblox Studio so it can send your project structure to VS Code.
 
-```json
-{
-  "mcpServers": {
-    "roblox-directory-tree": {
-      "command": "node",
-      "args": ["C:/FULL/PATH/TO/mcp-server/index.js"],
-      "env": {
-        "DIRECTORY_TREE_SERVER": "http://localhost:21326"
-      }
-    }
-  }
-}
-```
+### 3. Start the Server
 
-⚠️ **Replace `C:/FULL/PATH/TO/mcp-server/index.js` with the actual full path to the index.js file!**
+Open the **Roblox Directory** panel in the VS Code sidebar and click the **▶ Start Server** button.
 
-### 3. Restart Claude Desktop
+### 4. (Optional) Claude Desktop Integration
 
-Close and reopen Claude Desktop for the changes to take effect.
+Click the **✨ Setup Claude Desktop Integration** button in the Roblox Directory panel title bar. This automatically configures Claude Desktop's MCP config — no manual editing needed.
 
-## Available Tools
+Restart Claude Desktop after setup.
+
+## Features
+
+- **Live tree view** of your Roblox project structure in VS Code
+- **Copy tree** to clipboard for pasting into AI assistants
+- **Copy path** of any item (right-click)
+- **Status bar** showing connection state
+- **Auto-refresh** on incoming data from Studio
+- **Claude Desktop MCP** integration (one-click setup)
+
+## MCP Tools (Claude Desktop)
 
 Once configured, Claude can use these tools:
 
 | Tool | Description |
 |------|-------------|
-| `get_roblox_directory_tree` | Get the complete project tree |
-| `search_roblox_project` | Search for files/scripts by name |
-| `get_roblox_connection_status` | Check if Studio is connected |
+| `get_roblox_project_structure` | Get the complete project tree (text or JSON) |
+| `search_roblox_project` | Search for scripts/modules/folders by name |
+| `check_roblox_connection` | Check if Studio is connected and server is running |
 
-## Usage
-
-Just ask Claude things like:
+**Example prompts:**
 
 - "What's my Roblox project structure?"
 - "Search for DataService in my project"
 - "Is Roblox Studio connected?"
 - "Show me all the modules in ReplicatedStorage"
 
-Claude will automatically fetch the info from your VS Code extension!
+## Settings
 
-## Requirements
-
-1. VS Code extension must be running
-2. Server must be started (click ▶ in VS Code)
-3. Roblox Studio plugin must be connected
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `robloxDirectoryTree.serverPort` | `21326` | Port for the built-in server |
+| `robloxDirectoryTree.autoRefresh` | `true` | Automatically refresh the tree |
+| `robloxDirectoryTree.refreshInterval` | `3000` | Auto-refresh interval (ms) |
+| `robloxDirectoryTree.autoStartServer` | `false` | Start the server automatically on VS Code launch |
 
 ## Troubleshooting
 
@@ -72,7 +66,10 @@ Claude will automatically fetch the info from your VS Code extension!
 - Click ▶ Start Server in the Roblox Directory sidebar
 - Check that port 21326 is not blocked
 
+**Tree shows "Waiting for Roblox Studio..."**
+- Make sure the Roblox Studio plugin is installed and running
+- Ensure Studio and VS Code are on the same machine
+
 **Claude doesn't see the MCP server**
-- Double-check the path in `claude_desktop_config.json`
-- Make sure you restarted Claude Desktop
-- Check the path uses forward slashes or escaped backslashes
+- Click the ✨ button to re-run MCP setup
+- Make sure you restarted Claude Desktop after setup
